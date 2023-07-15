@@ -1,11 +1,36 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-
+import { io } from 'socket.io-client'
+let socket
 export default function Chat() {
   const [messages, setMessages] = useState([])
-  const [userName, setUserName] = useState(window.localStorage.getItem('username') ?? '')
-  useEffect(()=>{}, [userName])
+  const [userName, setUserName] = useState('')
+  useEffect(() => {asyncHandler()}, [])
+  async function asyncHandler() {
+    const user = window.localStorage.getItem('username') ?? '';
+    setUserName(user);
+
+    console.log("Connecting to WebSocket server...");
+    const newSocket = io("ws://localhost:42000", {
+      transports: ["websocket"],
+    });
+
+    newSocket.on("connect", () => {
+      console.log("Connected to WebSocket server");
+      newSocket.send('test')
+    });
+
+    newSocket.on("message", (newMessage) => {
+      console.log("Received message:", newMessage);
+    });
+
+    // Clean up the socket connection on unmount
+    return () => {
+      console.log("Disconnecting from WebSocket server...");
+      newSocket.disconnect();
+    };
+  }
 
   function handleChat(e) {
     if (e.key === 'Enter' || e.keyCode === 13) {
