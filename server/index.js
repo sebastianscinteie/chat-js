@@ -5,26 +5,40 @@ const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
 
-app.use(cors()); // Enable CORS for all routes
+let messages = []
 
-io.on("connection", (socket) => {
-  console.log("A user connected");
+app.use(cors());
 
-  // Listen for incoming messages
-  socket.on("message", (message) => {
-    console.log("Received message:", message);
-
-    // Broadcast the message to all connected clients
-    io.emit("message", message);
+app.get('/socket', (req, res) => {
+  if (res.socket.server.io) {
+    console.log("Server already created")
+    res.end();
+    return;
+  }
+  
+  console.log("Creating new server.")
+  const io = new Server(server);
+  res.socket.server.io = io
+  
+  io.on("connection", (socket) => {
+    console.log("A user connected");
+    io.emit("server-message", messages);
+    
+    socket.on("user-message", (msg) => {  
+      messages.push(msg);  
+      io.emit("server-message", messages);
+    });
+  
+    socket.on("disconnect", () => {
+      console.log("A user disconnected");
+    });
   });
 
-  // Handle disconnection
-  socket.on("disconnect", () => {
-    console.log("A user disconnected");
-  });
-});
+  res.end()
+})
+
+
 
 const PORT = process.env.PORT || 42000;
 server.listen(PORT, () => {
