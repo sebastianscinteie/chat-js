@@ -8,6 +8,9 @@ const server = http.createServer(app);
 
 let messages = []
 
+let users = new Map();
+
+
 app.use(cors());
 
 app.get('/socket', (req, res) => {
@@ -23,7 +26,12 @@ app.get('/socket', (req, res) => {
   
   io.on("connection", (socket) => {
     console.log("A user connected");
+    
     io.emit("server-message", messages);
+
+    socket.on("username", (msg) => {  
+      users.set(socket.id, msg);
+    });
     
     socket.on("user-message", (msg) => {  
       messages.push(msg);  
@@ -38,9 +46,9 @@ app.get('/socket', (req, res) => {
   res.end()
 })
 
-
-
 const PORT = process.env.PORT || 42000;
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+
+

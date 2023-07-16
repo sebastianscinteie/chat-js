@@ -5,12 +5,13 @@ import { io } from 'socket.io-client'
 
 let socket
 
-
 export default function Chat() {
   const [messages, setMessages] = useState([])
-  const [userName, setUserName] = useState('')
+  const [userName, setUsername] = useState('')
 
   useEffect(() => {
+    setUsername(makeid(8));
+
     fetch("http://localhost:42000/socket").then(() =>{
       socket = io("ws://localhost:42000", {
         transports: ["websocket"],
@@ -18,6 +19,8 @@ export default function Chat() {
     
       socket.on("connect", () => {
         console.log("Connected to WebSocket server");
+
+        socket.emit("username", userName);
       });
     
       socket.on("server-message", (messages) => {
@@ -29,9 +32,6 @@ export default function Chat() {
       socket.disconnect()
     }
   },[])
-
-
-
 
   function submitChatMessage(e) {
     if (e.key === 'Enter' || e.keyCode === 13) {
@@ -46,7 +46,7 @@ export default function Chat() {
 
   function changeUser(e) {
     if ((e.key === 'Enter' || e.keyCode === 13) && e.target.value) {
-      setUserName(e.target.value)
+      setUsername(e.target.value)
       e.target.value = ''
     }
   }
@@ -67,4 +67,16 @@ export default function Chat() {
       </div>   
     </main>
   )
+}
+
+function makeid(length) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
 }
