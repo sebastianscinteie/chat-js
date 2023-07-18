@@ -59,12 +59,15 @@ export default function Chat() {
     <main className="flex flex-col ml-10 mt-10 w-1/2">
       <h1 className="m-4 text-gray-600 text-4xl font-extrabold">Welcome <span className='text-purple-600'>{userName}</span> to the chat.</h1>
       <div className="mt-5 p-2 w-auto h-screen">
-      <input className='border rounded border-stone-900 mb-2' placeholder='Change Username' onKeyDown={changeUser}></input>
+        <input className='border rounded border-stone-900 mb-2' placeholder='Change Username' onKeyDown={changeUser}></input>
         <ul className='border rounded border-stone-900 bg-slate-200 mb-2 p-2 h-5/6'>
          {messages.map((x,index) => <li key={index}>{getPrettyTime(x.time)} <b className='text-purple-600'>{x.user}:</b> {x.message}</li>)}
         </ul>
         <input className='border rounded border-stone-900 w-full' onKeyDown={submitChatMessage}></input>
-      </div>   
+      </div>
+      <ul className='border rounded border-stone-900 bg-slate-200 mb-2 p-2 h-5/6'>
+        {usres.map((x) => <li key={index}>x</li>)}
+      </ul>
     </main>
   )
 }

@@ -39,6 +39,7 @@ app.get('/socket', (req, res) => {
     });
   
     socket.on("disconnect", () => {
+      users.delete(socket.id);
       console.log("A user disconnected");
     });
   });
