@@ -1,30 +1,45 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { io } from 'socket.io-client'
 
-let socket
+let socket;
 
 export default function Chat() {
   const [messages, setMessages] = useState([])
-  const [userName, setUsername] = useState('')
+  const [username, setUsername] = useState('')
 
   useEffect(() => {
     setUsername(makeid(8));
 
-    fetch("http://localhost:42000/socket").then(() =>{
-      socket = io("ws://localhost:42000", {
-        transports: ["websocket"],
-      });
-    
-      socket.on("connect", () => {
-        console.log("Connected to WebSocket server");
+    fetch("http://localhost:42000/socket", {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "localhost:42000"
+      },
+    }).then(() =>{
+      socket = new WebSocket("ws://localhost:42000");
 
-        socket.emit("username", userName);
-      });
+      socket.addEventListener('open', () => {
+        console.log("Socket open.");
+      })
     
-      socket.on("server-message", (messages) => {
-        setMessages(messages)
+      socket.addEventListener("message", (msg) => {
+        let data = JSON.parse(msg.data)
+        if(!"username" in data) {
+          console.log("Message from server doesn't contain user field.")
+        }
+        if(!"time" in data) {
+          console.log("Message from server doesn't contain time field.")
+        }
+        if(!"message" in data) {
+          console.log("Message from server doesn't contain message field.")
+        }
+
+        console.log(messages)
+        let newMessages = messages.slice()
+        newMessages.push(data)
+        setMessages(newMessages)
+        console.log(messages)
       });
     });
     
@@ -34,13 +49,16 @@ export default function Chat() {
   },[])
 
   function submitChatMessage(e) {
+    if (e.target.value == '') {
+      return;
+    }
     if (e.key === 'Enter' || e.keyCode === 13) {
       let date = new Date();
       let time = `${date.getHours()}:${date.getMinutes()}`
-      const userMessage = {time: time, user: userName, message: e.target.value}
+      const userMessage = {time: time, username: username, message: e.target.value}
       e.target.value = ''
 
-      socket.emit("user-message",userMessage);
+      socket.send(JSON.stringify(userMessage));
     }
   }
 
@@ -57,17 +75,17 @@ export default function Chat() {
 
   return (
     <main className="flex flex-col ml-10 mt-10 w-1/2">
-      <h1 className="m-4 text-gray-600 text-4xl font-extrabold">Welcome <span className='text-purple-600'>{userName}</span> to the chat.</h1>
+      <h1 className="m-4 text-gray-600 text-4xl font-extrabold">Welcome <span className='text-purple-600'>{username}</span> to the chat.</h1>
       <div className="mt-5 p-2 w-auto h-screen">
         <input className='border rounded border-stone-900 mb-2' placeholder='Change Username' onKeyDown={changeUser}></input>
         <ul className='border rounded border-stone-900 bg-slate-200 mb-2 p-2 h-5/6'>
-         {messages.map((x,index) => <li key={index}>{getPrettyTime(x.time)} <b className='text-purple-600'>{x.user}:</b> {x.message}</li>)}
+         {messages.map((x,index) => <li key={index}>{getPrettyTime(x.time)} <b className='text-purple-600'>{x.username}:</b> {x.message}</li>)}
         </ul>
         <input className='border rounded border-stone-900 w-full' onKeyDown={submitChatMessage}></input>
       </div>
-      <ul className='border rounded border-stone-900 bg-slate-200 mb-2 p-2 h-5/6'>
-        {usres.map((x) => <li key={index}>x</li>)}
-      </ul>
+      {/* <ul className='border rounded border-stone-900 bg-slate-200 mb-2 p-2 h-5/6'>
+        {users.map((x) => <li key={index}>x</li>)}
+      </ul> */}
     </main>
   )
 }

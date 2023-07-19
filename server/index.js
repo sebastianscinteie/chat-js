@@ -1,55 +1,91 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-const cors = require("cors");
 
-const app = express();
-const server = http.createServer(app);
+const http = require('http');
+const { WebSocket, WebSocketServer } = require('ws');
+
 
 let messages = []
 
-let users = new Map();
 
-
-app.use(cors());
-
-app.get('/socket', (req, res) => {
-  if (res.socket.server.io) {
-    console.log("Server already created")
-    res.end();
-    return;
-  }
+// class Room {
+//   name
+//   users
   
-  console.log("Creating new server.")
-  const io = new Server(server);
-  res.socket.server.io = io
-  
-  io.on("connection", (socket) => {
-    console.log("A user connected");
-    
-    io.emit("server-message", messages);
+//   constructor(name) {
+//     this.name = name
+//     this.users = []
+//   }
 
-    socket.on("username", (msg) => {  
-      users.set(socket.id, msg);
-    });
-    
-    socket.on("user-message", (msg) => {  
-      messages.push(msg);  
-      io.emit("server-message", messages);
-    });
-  
-    socket.on("disconnect", () => {
-      users.delete(socket.id);
-      console.log("A user disconnected");
-    });
-  });
+//   add(username, socket) {
+//     if (!username) {
+//       console.log("No username")
+//       return; 
+//     } 
+//     if (this.users.includes(socket)) {
+//       console.log("User already in room.")
+//       return;
+//     } 
+//     socket.username = username
+//     this.users.add(socket);
+//   }
 
-  res.end()
-})
+//   remove(socket) {
+//     index = this.users.indexOf(socket)
+//     this.users.splice(index,);
+//   }
+// }
+
+// const room = new Room('Chat room')
 
 const PORT = process.env.PORT || 42000;
-server.listen(PORT, () => {
+
+http.createServer((req, res) => {
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+	res.setHeader('Access-Control-Request-Method', '*');
+	res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
+	res.setHeader('Access-Control-Allow-Headers', '*');
+
+  if (req.url == '/socket') {
+    if (res.socket.server.wss) {
+      console.log("Server already created")
+      res.end();
+      return;
+    }
+    
+    console.log("Creating new server.")
+    const wss = new WebSocketServer({
+      server: res.socket.server,
+      clientTracking: true,
+    });
+    res.socket.server.wss = wss
+    
+    wss.on("connection", (socket) => {
+      socket.on("message", (msg) => {
+        data = JSON.parse(msg);
+        console.log(data);
+        if ('username' in data && socket.username != data.username) {
+          socket.username = data.username;
+        }
+        if (!'message' in data) {
+          console.log('No message field in message from client.');
+          return;
+        }
+        if (!'time' in data) {
+          console.log('No time field in message from client.');
+          return;
+        }
+
+        wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(data).toString());
+          }
+        });
+      });
+    });
+  }
+  
+  res.end();
+}).listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
-
 
