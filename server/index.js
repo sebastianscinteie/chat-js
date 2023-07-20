@@ -29,13 +29,13 @@ http.createServer((req, res) => {
     res.socket.server.wss = wss
     
     wss.on("connection", (socket) => {
-    //   if (messages.length) {
-    //     socket.send(messages.slice(-20));
-    //   }
+      if (messages.length) {
+        socket.send(JSON.stringify({recentMessages: messages.slice(-100)}));
+      }
 
       socket.on("message", (msg) => {
         data = JSON.parse(msg);
-        console.log(data);
+
         if ('username' in data && socket.username != data.username) {
           socket.username = data.username;
         }
@@ -48,7 +48,7 @@ http.createServer((req, res) => {
           return;
         }
 
-        messages.push(data.message);
+        messages.push(data);
 
         wss.clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {

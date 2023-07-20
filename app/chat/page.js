@@ -25,6 +25,12 @@ export default function Chat() {
     
       socket.addEventListener("message", (msg) => {
         let data = JSON.parse(msg.data)
+        if (data?.recentMessages) {
+          messages.push(...data.recentMessages)
+          setMessages([...messages])
+          return;
+        }
+
         if(!"username" in data) {
           console.log("Message from server doesn't contain user field.")
         }
