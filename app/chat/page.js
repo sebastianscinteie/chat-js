@@ -35,11 +35,8 @@ export default function Chat() {
           console.log("Message from server doesn't contain message field.")
         }
 
-        console.log(messages)
-        let newMessages = messages.slice()
-        newMessages.push(data)
-        setMessages(newMessages)
-        console.log(messages)
+        messages.push(data)
+        setMessages([...messages])
       });
     });
     

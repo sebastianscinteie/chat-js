@@ -5,37 +5,6 @@ const { WebSocket, WebSocketServer } = require('ws');
 
 let messages = []
 
-
-// class Room {
-//   name
-//   users
-  
-//   constructor(name) {
-//     this.name = name
-//     this.users = []
-//   }
-
-//   add(username, socket) {
-//     if (!username) {
-//       console.log("No username")
-//       return; 
-//     } 
-//     if (this.users.includes(socket)) {
-//       console.log("User already in room.")
-//       return;
-//     } 
-//     socket.username = username
-//     this.users.add(socket);
-//   }
-
-//   remove(socket) {
-//     index = this.users.indexOf(socket)
-//     this.users.splice(index,);
-//   }
-// }
-
-// const room = new Room('Chat room')
-
 const PORT = process.env.PORT || 42000;
 
 http.createServer((req, res) => {
@@ -60,6 +29,10 @@ http.createServer((req, res) => {
     res.socket.server.wss = wss
     
     wss.on("connection", (socket) => {
+    //   if (messages.length) {
+    //     socket.send(messages.slice(-20));
+    //   }
+
       socket.on("message", (msg) => {
         data = JSON.parse(msg);
         console.log(data);
@@ -75,9 +48,11 @@ http.createServer((req, res) => {
           return;
         }
 
+        messages.push(data.message);
+
         wss.clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(data).toString());
+            client.send(JSON.stringify(data));
           }
         });
       });
