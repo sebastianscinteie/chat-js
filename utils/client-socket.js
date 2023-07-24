@@ -1,6 +1,7 @@
 
 export default class ClientSocket extends WebSocket{
-  constructor(...args){
+
+  constructor(messages, setMessages, ...args){
     super(...args);
 
     this.addEventListener('open', () => {

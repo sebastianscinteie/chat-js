@@ -23,7 +23,7 @@ export default function Chat() {
         "Access-Control-Allow-Origin": "localhost:42000"
       },
     }).then(() =>{
-      socket = new ClientSocket("ws://localhost:42000");
+      socket = new ClientSocket(messages, setMessages, "ws://localhost:42000");
     });
     
     return () => {
@@ -66,9 +66,9 @@ export default function Chat() {
         </ul>
         <input className='border rounded border-stone-900 w-full' onKeyDown={submitChatMessage}></input>
       </div>
-      <ul className='border rounded border-stone-900 bg-slate-200 mb-2 p-2 h-5/6'>
+      {/* <ul className='border rounded border-stone-900 bg-slate-200 mb-2 p-2 h-5/6'>
         {users.map((x) => <li key={index}>x</li>)}
-      </ul>
+      </ul> */}
     </main>
   )
 }
