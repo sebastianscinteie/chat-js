@@ -2,7 +2,6 @@
 const http = require('http');
 const { WebSocket, WebSocketServer } = require('ws');
 
-
 let messages = []
 
 const PORT = process.env.PORT || 42000;
@@ -31,6 +30,13 @@ http.createServer((req, res) => {
     wss.on("connection", (socket) => {
       if (messages.length) {
         socket.send(JSON.stringify({recentMessages: messages.slice(-100)}));
+      }
+
+      if (wss.clients.size != 0) {
+        let users =  [...wss.clients].map((x) => x.username)
+        socket.send(JSON.stringify({userList: users}));
+      } else {
+        console.error('There are no clients!')
       }
 
       socket.on("message", (msg) => {

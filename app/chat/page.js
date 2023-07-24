@@ -1,18 +1,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import ClientSocket from '../../utils/client-socket'
 
 let socket
 
 export default function Chat() {
   const [messages, setMessages] = useState([])
   const [username, setUsername] = useState('')
+  const [users, setUsers] = useState([])
 
   useEffect(() => {
     const user = window.sessionStorage.getItem('username')
     if (user) {
       setUsername(user);
+      
+      users.push(user)
+      setUsers([...users])
     } else {
       console.error('User not found.')
     }
@@ -23,11 +26,48 @@ export default function Chat() {
         "Access-Control-Allow-Origin": "localhost:42000"
       },
     }).then(() =>{
-      socket = new ClientSocket(messages, setMessages, "ws://localhost:42000");
+      socket = new WebSocket("ws://localhost:42000");
+      
+      socket.addEventListener('open', () => {
+        console.log("Socket open.");
+      })
+    
+      socket.addEventListener("message", (msg) => {
+        let data = JSON.parse(msg.data)
+        if ("recentMessages" in data) {
+          messages.push(...data.recentMessages)
+          setMessages([...messages])
+          return;
+        }
+  
+        if ("userList" in data) {
+          users.push(...data.userList)
+          setUsers([...users])
+          return;
+        }
+  
+        if(!"username" in data) {
+          console.log("Message from server doesn't contain user field.")
+        }
+        if(!"time" in data) {
+          console.log("Message from server doesn't contain time field.")
+        }
+        if(!"message" in data) {
+          console.log("Message from server doesn't contain message field.")
+        }
+  
+        if(!users.includes(data.username)) {
+          users.push(data.username)
+          setUsers([...users])
+        }
+
+        messages.push(data)
+        setMessages([...messages])
+      });
     });
     
     return () => {
-      socket.disconnect()
+      socket.close()
     }
   },[])
 
@@ -47,6 +87,8 @@ export default function Chat() {
 
   function changeUser(e) {
     if ((e.key === 'Enter' || e.keyCode === 13) && e.target.value) {
+      users[0] = e.target.value
+      setUsers([...users])
       setUsername(e.target.value)
       e.target.value = ''
     }
@@ -62,13 +104,13 @@ export default function Chat() {
       <div className="mt-5 p-2 w-auto h-screen">
         <input className='border rounded border-stone-900 mb-2' placeholder='Change Username' onKeyDown={changeUser}></input>
         <ul className='border rounded border-stone-900 bg-slate-200 mb-2 p-2 h-5/6'>
-         {messages.map((x,index) => <li key={index}>{getPrettyTime(x.time)} <b className='text-purple-600'>{x.username}:</b> {x.message}</li>)}
+         {messages.map((x,i) => <li key={i}>{getPrettyTime(x.time)} <b className='text-purple-600'>{x.username}:</b> {x.message}</li>)}
         </ul>
         <input className='border rounded border-stone-900 w-full' onKeyDown={submitChatMessage}></input>
       </div>
-      {/* <ul className='border rounded border-stone-900 bg-slate-200 mb-2 p-2 h-5/6'>
-        {users.map((x) => <li key={index}>x</li>)}
-      </ul> */}
+      <ul className='border rounded border-stone-900 bg-slate-200 mb-2 p-2 h-5/6'>
+        {users.map((x, i) => <li key={i}>{x}</li>)}
+      </ul>
     </main>
   )
 }
