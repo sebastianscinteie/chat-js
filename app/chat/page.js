@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import ClientSocket from '../../utils/socket'
 
-let socket;
+let socket
 
 export default function Chat() {
   const [messages, setMessages] = useState([])
@@ -22,33 +23,7 @@ export default function Chat() {
         "Access-Control-Allow-Origin": "localhost:42000"
       },
     }).then(() =>{
-      socket = new WebSocket("ws://localhost:42000");
-
-      socket.addEventListener('open', () => {
-        console.log("Socket open.");
-      })
-    
-      socket.addEventListener("message", (msg) => {
-        let data = JSON.parse(msg.data)
-        if (data?.recentMessages) {
-          messages.push(...data.recentMessages)
-          setMessages([...messages])
-          return;
-        }
-
-        if(!"username" in data) {
-          console.log("Message from server doesn't contain user field.")
-        }
-        if(!"time" in data) {
-          console.log("Message from server doesn't contain time field.")
-        }
-        if(!"message" in data) {
-          console.log("Message from server doesn't contain message field.")
-        }
-
-        messages.push(data)
-        setMessages([...messages])
-      });
+      socket = new ClientSocket("ws://localhost:42000");
     });
     
     return () => {
