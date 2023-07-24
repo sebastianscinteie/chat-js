@@ -7,7 +7,7 @@ export default function Login() {
 
   function handleEnter(e) {
     if (e.key === 'Enter' || e.keyCode === 13) {
-      e.target.value ? window.localStorage.setItem('username', e.target.value) : null;
+      e.target.value ? window.sessionStorage.setItem('username', e.target.value) : null;
       push('/chat');
     }
   }

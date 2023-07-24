@@ -9,7 +9,12 @@ export default function Chat() {
   const [username, setUsername] = useState('')
 
   useEffect(() => {
-    setUsername(makeid(8));
+    const user = window.sessionStorage.getItem('username')
+    if (user) {
+      setUsername(user);
+    } else {
+      console.error('User not found.')
+    }
 
     fetch("http://localhost:42000/socket", {
       headers: {
